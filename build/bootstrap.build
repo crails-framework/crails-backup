@@ -1,0 +1,7 @@
+project = crails-backup
+
+using version
+using config
+using test
+using install
+using dist
