@@ -6,6 +6,8 @@
 
 using namespace std;
 
+chrono::duration<int> duration_from_env(const char* varname, chrono::duration<int> default_value);
+
 const char* get_backup_root()
 {
   const char* backup_root = getenv("CRAILS_BACKUP_PATH");
@@ -52,10 +54,14 @@ void wipe_expired_backups(const string_view name)
 {
   using namespace chrono_literals;
 
+  const chrono::duration<int> maximum_backup_retention   = duration_from_env("BACKUP_MAX_RETENTION", 24h * 31);
+  const chrono::duration<int> long_retention_start       = duration_from_env("BACKUP_LONGTERM_STARTS_AFTER", 24h);
+  const chrono::duration<int> long_retention_periodicity = duration_from_env("BACKUP_LONGTERM_PERIODICITY", 24h);
+
   auto list = list_backup_archives(name);
   chrono::time_point now = chrono::file_clock::now();
   chrono::time_point last_time_point = now;
-  chrono::time_point oldest_backup = now - (24h * 31);
+  chrono::time_point oldest_backup = now - maximum_backup_retention;
 
   for (auto it = list.rbegin() ; it != list.rend() ; ++it)
   {
@@ -63,11 +69,11 @@ void wipe_expired_backups(const string_view name)
 
     if (entry.second < oldest_backup)
       wipe_backup(name, entry.first);
-    else if ((now - entry.second) > 24h)
+    else if ((now - entry.second) > long_retention_start)
     {
       auto elapsed_time = (last_time_point - entry.second);
 
-      if (elapsed_time < 24h)
+      if (elapsed_time < long_retention_periodicity)
         wipe_backup(name, entry.first);
       else
         last_time_point = entry.second;
