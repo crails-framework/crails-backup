@@ -57,8 +57,10 @@ void wipe_expired_backups(const string_view name)
   chrono::time_point last_time_point = now;
   chrono::time_point oldest_backup = now - (24h * 31);
 
-  for (const auto& entry : list)
+  for (auto it = list.rbegin() ; it != list.rend() ; ++it)
   {
+    const auto& entry = *it;
+
     if (entry.second < oldest_backup)
       wipe_backup(name, entry.first);
     else if ((now - entry.second) > 24h)
