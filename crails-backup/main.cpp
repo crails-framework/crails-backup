@@ -9,6 +9,7 @@
 #include "commands/remove.hpp"
 #include "commands/restore.hpp"
 #include "commands/list.hpp"
+#include "commands/wipe.hpp"
 
 // bzip2 might be better than gzip (slower with increased compression ?)
 // -> use -j instead of -z in tar commands
@@ -29,6 +30,7 @@ public:
     add_command("list", []() { return make_shared<ListCommand>(); });
     add_command("add", []() { return make_shared<AddCommand>(); });
     add_command("remove", []() { return make_shared<RemoveCommand>(); });
+    add_command("wipe", []() { return make_shared<WipeCommand>(); });
   }
 };
 
@@ -40,7 +42,7 @@ static void find_exe_file(const char* arg0)
   if (!error)
     exe_path = Crails::which(arg0);
   if (!filesystem::exists(exe_path))
-    cerr << "could not find executable path, tasks related to crontab will fail" << endl;
+    cerr << "could not find executable path from value '" << arg0 << "', tasks related to crontab will fail" << endl;
 }
 
 int main(int argc, const char** argv)
