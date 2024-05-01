@@ -6,7 +6,7 @@
 using namespace std;
 using namespace Crails;
 
-void dump_mongodb(const DatabaseUrl& database, const filesystem::path& target)
+bool dump_mongodb(const DatabaseUrl& database, const filesystem::path& target)
 {
   ostringstream stream;
 
@@ -15,10 +15,10 @@ void dump_mongodb(const DatabaseUrl& database, const filesystem::path& target)
     << " --archive " << target
     << " --uri " << database.to_string();
   cout << "+ " << stream.str() << endl;
-  system(stream.str().c_str());
+  return system(stream.str().c_str()) == 0;
 }
 
-void restore_mongodb(const DatabaseUrl& database, const filesystem::path& target)
+bool restore_mongodb(const DatabaseUrl& database, const filesystem::path& target)
 {
   ostringstream stream;
 
@@ -27,5 +27,5 @@ void restore_mongodb(const DatabaseUrl& database, const filesystem::path& target
     << " --uri " << database.to_string()
     << ' ' << target;
   cout << "+ " << stream.str() << endl;
-  system(stream.str().c_str());
+  return system(stream.str().c_str()) == 0;
 }

@@ -28,7 +28,7 @@ static void prepare_password(const DatabaseUrl& database)
     unsetenv("PGPASSWORD");
 }
 
-void dump_postgres(const DatabaseUrl& database, const filesystem::path& target)
+bool dump_postgres(const DatabaseUrl& database, const filesystem::path& target)
 {
   ostringstream stream;
 
@@ -39,10 +39,10 @@ void dump_postgres(const DatabaseUrl& database, const filesystem::path& target)
     << '>' << target;
   prepare_password(database);
   cout << "+ " << stream.str() << endl;
-  system(stream.str().c_str());
+  return system(stream.str().c_str()) == 0;
 }
 
-void restore_postgres(const DatabaseUrl& database, const filesystem::path& source)
+bool restore_postgres(const DatabaseUrl& database, const filesystem::path& source)
 {
   ostringstream stream;
 
@@ -53,5 +53,5 @@ void restore_postgres(const DatabaseUrl& database, const filesystem::path& sourc
     << '<' << source;
   prepare_password(database);
   cout << "+ " << stream.str() << endl;
-  system(stream.str().c_str());
+  return system(stream.str().c_str()) == 0;
 }

@@ -10,12 +10,12 @@ using namespace std;
 
 filesystem::path get_backup_folder(const string_view name);
 
-typedef void (*DatabaseRestoreFunction)(const Crails::DatabaseUrl&, const filesystem::path&);
+typedef bool (*DatabaseRestoreFunction)(const Crails::DatabaseUrl&, const filesystem::path&);
 typedef map<string_view, DatabaseRestoreFunction> RestoreFunctionMap;
 
-void restore_mysql(const Crails::DatabaseUrl&, const filesystem::path&);
-void restore_postgres(const Crails::DatabaseUrl&, const filesystem::path&);
-void restore_mongodb(const Crails::DatabaseUrl&, const filesystem::path&);
+bool restore_mysql(const Crails::DatabaseUrl&, const filesystem::path&);
+bool restore_postgres(const Crails::DatabaseUrl&, const filesystem::path&);
+bool restore_mongodb(const Crails::DatabaseUrl&, const filesystem::path&);
 
 RestoreFunctionMap restore_functions = {
   {"mysql",    &restore_mysql},

@@ -20,11 +20,11 @@ map<unsigned long, filesystem::file_time_type> list_backup_archives(const string
 string archive_filename(unsigned long id);
 void wipe_expired_backups(const string_view name);
 
-typedef void (*DatabaseDumpFunction)(const Crails::DatabaseUrl&, const filesystem::path&);
+typedef bool (*DatabaseDumpFunction)(const Crails::DatabaseUrl&, const filesystem::path&);
 
-void dump_mysql(const Crails::DatabaseUrl&, const filesystem::path&);
-void dump_postgres(const Crails::DatabaseUrl&, const filesystem::path&);
-void dump_mongodb(const Crails::DatabaseUrl&, const filesystem::path&);
+bool dump_mysql(const Crails::DatabaseUrl&, const filesystem::path&);
+bool dump_postgres(const Crails::DatabaseUrl&, const filesystem::path&);
+bool dump_mongodb(const Crails::DatabaseUrl&, const filesystem::path&);
 
 map<string_view, DatabaseDumpFunction> dump_functions = {
   {"mysql",    &dump_mysql},

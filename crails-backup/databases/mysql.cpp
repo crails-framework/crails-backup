@@ -20,7 +20,7 @@ static string append_connection_options(const DatabaseUrl& database)
   return stream.str();
 }
 
-void dump_mysql(const DatabaseUrl& database, const filesystem::path& target)
+bool dump_mysql(const DatabaseUrl& database, const filesystem::path& target)
 {
   ostringstream stream;
 
@@ -30,10 +30,10 @@ void dump_mysql(const DatabaseUrl& database, const filesystem::path& target)
     << ' ' << quoted(database.database_name)
     << '>' << target;
   cout << "+ " << stream.str() << endl;
-  system(stream.str().c_str());
+  return system(stream.str().c_str()) == 0;
 }
 
-void restore_mysql(const DatabaseUrl& database, const filesystem::path& source)
+bool restore_mysql(const DatabaseUrl& database, const filesystem::path& source)
 {
   ostringstream stream;
 
@@ -43,5 +43,5 @@ void restore_mysql(const DatabaseUrl& database, const filesystem::path& source)
     << " -p " << quoted(database.database_name)
     << '<' << source;
   cout << "+ " << stream.str() << endl;
-  system(stream.str().c_str());
+  return system(stream.str().c_str()) == 0;
 }
