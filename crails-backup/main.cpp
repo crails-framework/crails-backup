@@ -9,6 +9,7 @@
 #include "commands/remove.hpp"
 #include "commands/restore.hpp"
 #include "commands/list.hpp"
+#include "commands/status.hpp"
 #include "commands/wipe.hpp"
 
 // bzip2 might be better than gzip (slower with increased compression ?)
@@ -30,6 +31,7 @@ public:
     add_command("list", []() { return make_shared<ListCommand>(); });
     add_command("add", []() { return make_shared<AddCommand>(); });
     add_command("remove", []() { return make_shared<RemoveCommand>(); });
+    add_command("status", []() { return make_shared<StatusCommand>(); });
     add_command("wipe", []() { return make_shared<WipeCommand>(); });
   }
 };
