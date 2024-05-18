@@ -1,14 +1,13 @@
 : 1
 name: crails-backup
-version: 0.1.0-a.0.z
+version: 1.0.0
 language: c++
-project: crails-modules
+project: crails
 summary: crails-backup C++ executable
 license: BSD-C3 
 description-file: README.md
-url: https://example.org/crails-modules
+url: https://github.com/crails-framework/crails-backup
 email: michael@planed.es
-#build-error-email: you@example.org
 depends: * build2 >= 0.16.0
 depends: * bpkg >= 0.16.0
 depends: { libcrails-logger libcrails-cli libcrails-readfile libcrails-database-url libcrails-crontab } ^2.0.0

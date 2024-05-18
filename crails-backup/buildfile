@@ -1,6 +1,6 @@
 libs =
-#import libs += libhello%lib{hello}
 import libs += libcrails-cli%lib{crails-cli}
+import libs += libcrails-readfile%lib{crails-readfile}
 import libs += libcrails-crontab%lib{crails-crontab}
 import libs += libcrails-database-url%lib{crails-database-url}
 import libs += libboost-program-options%lib{boost_program_options}
