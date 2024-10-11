@@ -1,4 +1,5 @@
 #include "list.hpp"
+#include "../bup.hpp"
 #include <filesystem>
 #include <string_view>
 #include <sstream>
@@ -11,7 +12,6 @@ using namespace std;
 
 const char* get_backup_root();
 filesystem::path get_backup_folder(const string_view name);
-map<unsigned long, filesystem::file_time_type> list_backup_archives(const string_view name);
   
 void ListCommand::options_description(boost::program_options::options_description& desc) const
 {
@@ -41,15 +41,10 @@ int ListCommand::list_backups()
 
 int ListCommand::list_files()
 {
-  auto archives = list_backup_archives(options["name"].as<string>());
-  bool short_mode = options.count("short");
+  const string backup_name = options["name"].as<string>();
+  filesystem::path backup_folder = get_backup_folder(backup_name);
+  const BupBackup backup(backup_folder);
+  ListMode mode = options.count("short") ? ShortMode : LongMode;
 
-  for (const auto& archive : archives)
-  {
-    if (short_mode)
-      cout << archive.first << endl;
-    else
-      cout << left << setw(10) << archive.first << ' ' << format("{:%H:%M %Y-%m-%d}", archive.second) << endl;
-  }
-  return 0;
+  return backup.list(mode) ? 0 : -1;
 }

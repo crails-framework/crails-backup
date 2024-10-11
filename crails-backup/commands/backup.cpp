@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include "backup.hpp"
+#include "../bup.hpp"
 
 using namespace std;
 
@@ -16,8 +17,6 @@ static std::filesystem::path tmp_dir;
 static std::map<std::string, std::string> name_to_path_map;
 
 filesystem::path get_backup_folder(const string_view name);
-map<unsigned long, filesystem::file_time_type> list_backup_archives(const string_view name);
-string archive_filename(unsigned long id);
 void wipe_expired_backups(const string_view name);
 
 typedef bool (*DatabaseDumpFunction)(const Crails::DatabaseUrl&, const filesystem::path&);
@@ -39,11 +38,6 @@ static pair<string_view,string_view> make_storage_id(const string_view text)
   if (separator == string::npos)
     return {"", text};
   return {text.substr(0, separator), text.substr(separator + 1)};
-}
-
-static string tar_transformer(const string_view key, const filesystem::path& path)
-{
-  return "s|" + path.string().substr(1) + '|' + string(key) + '|';
 }
 
 BackupCommand::~BackupCommand()
@@ -92,7 +86,7 @@ int BackupCommand::run()
           return -2;
       }
     }
-    if (pack_metadata() && gzip_pack() && store_backup())
+    if (pack_metadata() && store_backup())
       return 0;
   }
   return -1;
@@ -100,41 +94,16 @@ int BackupCommand::run()
 
 bool BackupCommand::store_backup()
 {
-  stringstream     command;
   string           backup_name   = options["name"].as<string>();
   filesystem::path backup_folder = get_backup_folder(backup_name);
-  filesystem::path target_path;
-  auto             backup_list   = list_backup_archives(backup_name);
-  auto             current_time  = chrono::file_clock::now();
-  unsigned long    highest_id    = 0;
+  const BupBackup  bup(backup_name);
 
-  for (const pair<unsigned long, filesystem::file_time_type>& backup_file : backup_list)
-    highest_id = max(backup_file.first, highest_id);
-  target_path = backup_folder / archive_filename(highest_id + 1);
-  command << "mv " << compressed_archive_path << ' ' << target_path;
-  cout << "+ " << command.str() << endl;
-  if (system(command.str().c_str()) == 0)
+  if (bup.init() && bup.index(tmp_dir) && bup.save(tmp_dir))
   {
     wipe_expired_backups(backup_name);
     return true;
   }
   return false;
-}
-
-string BackupCommand::add_to_archive_command_prefix() const
-{
-  ostringstream stream;
-
-  stream << "tar -rf " << archive_path;
-  return stream.str();
-}
-
-bool BackupCommand::gzip_pack()
-{
-  ostringstream stream;
-
-  stream << "gzip " << archive_path;
-  return system(stream.str().c_str()) == 0;
 }
 
 bool BackupCommand::pack_metadata()
@@ -149,9 +118,7 @@ bool BackupCommand::pack_metadata()
     for (auto it = name_to_path_map.begin() ; it != name_to_path_map.end() ; ++it)
       stream << it->first << '\n' << it->second << '\n';
     stream.close();
-    command << add_to_archive_command_prefix() << ' ' << filename;
-    cout << "+ " << command.str() << endl;
-    return system(command.str().c_str()) == 0;
+    return true;
   }
   return false;
 }
@@ -170,12 +137,13 @@ bool BackupCommand::pack_path(const string_view key, const filesystem::path& pat
     else
       full_key = "file." + string(key);
     name_to_path_map.emplace(full_key, absolute_path.string());
-    command << add_to_archive_command_prefix()
-            << " --transform "
-            << quoted(tar_transformer(full_key, absolute_path))
-            << ' ' << absolute_path;
-    cout << "+ " << command.str() << endl;
-    return system(command.str().c_str()) == 0;
+    filesystem::create_directories((tmp_dir / full_key).parent_path());
+    filesystem::copy(
+      absolute_path,
+      tmp_dir / full_key,
+      filesystem::copy_options::recursive
+    );
+    return true;
   }
   else
     cerr << "crails-backup could not solve " << path << endl;
@@ -196,13 +164,8 @@ bool BackupCommand::pack_database(const string& url)
     it->second(database, dump_path);
     if (filesystem::is_regular_file(dump_path))
     {
-      stringstream command;
-
       name_to_path_map.emplace(filename, url);
-      command << add_to_archive_command_prefix()
-              << ' ' << filename;
-      cout << "+ " << command.str() << endl;
-      return system(command.str().c_str()) == 0;
+      return true;
     }
     else
       cerr << "dump failed for database " << url << endl;

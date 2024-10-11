@@ -15,7 +15,5 @@ public:
   bool pack_path(const std::string_view key, const std::filesystem::path&);
   bool pack_database(const std::string& url);
   bool pack_metadata();
-  bool gzip_pack();
-  std::string add_to_archive_command_prefix() const;
   bool store_backup();
 };
