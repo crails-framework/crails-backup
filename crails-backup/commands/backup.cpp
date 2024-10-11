@@ -1,35 +1,30 @@
-#include <crails/database_url.hpp>
+#include "backup.hpp"
 #include <crails/cli/with_path.hpp>
-#include <chrono>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <cstdlib>
-#include <algorithm>
-#include "backup.hpp"
-#include "../bup.hpp"
 
 using namespace std;
-
-static std::filesystem::path archive_path;
-static std::filesystem::path compressed_archive_path;
-static std::filesystem::path tmp_dir;
-static std::map<std::string, std::string> name_to_path_map;
-
-filesystem::path get_backup_folder(const string_view name);
-void wipe_expired_backups(const string_view name);
-
-typedef bool (*DatabaseDumpFunction)(const Crails::DatabaseUrl&, const filesystem::path&);
 
 bool dump_mysql(const Crails::DatabaseUrl&, const filesystem::path&);
 bool dump_postgres(const Crails::DatabaseUrl&, const filesystem::path&);
 bool dump_mongodb(const Crails::DatabaseUrl&, const filesystem::path&);
 
-map<string_view, DatabaseDumpFunction> dump_functions = {
+const DatabaseBackupFunctionMap BackupCommandBase::dump_functions = {
   {"mysql",    &dump_mysql},
   {"postgres", &dump_postgres},
   {"mongodb",  &dump_mongodb}
 };
+
+string filename_for_database(const Crails::DatabaseUrl& database)
+{
+  return "database." + database.type + '.' + database.database_name;
+}
+
+BackupCommandBase::~BackupCommandBase()
+{
+  if (filesystem::exists(tmp_dir))
+    filesystem::remove_all(tmp_dir);
+}
 
 static pair<string_view,string_view> make_storage_id(const string_view text)
 {
@@ -40,13 +35,7 @@ static pair<string_view,string_view> make_storage_id(const string_view text)
   return {text.substr(0, separator), text.substr(separator + 1)};
 }
 
-BackupCommand::~BackupCommand()
-{
-  if (filesystem::exists(tmp_dir))
-    filesystem::remove_all(tmp_dir);
-}
-
-void BackupCommand::options_description(boost::program_options::options_description& desc) const
+void BackupCommandBase::options_description(boost::program_options::options_description& desc) const
 {
   using namespace boost;
   desc.add_options()
@@ -55,17 +44,18 @@ void BackupCommand::options_description(boost::program_options::options_descript
     ("file,f",     program_options::value<vector<string>>(), "list of file and directories");
 }
 
-int BackupCommand::run()
+bool BackupCommandBase::prepare()
 {
-  if (options.count("name"))
-  {
-    string name = options["name"].as<string>();
+  string name = options["name"].as<string>();
 
-    archive_path = "/tmp/backup-" + name + ".tar";
-    compressed_archive_path = archive_path.string() + ".gz";
-    tmp_dir = filesystem::temp_directory_path() / ("backup-" + name);
-    if (filesystem::exists(archive_path))
-      filesystem::remove(archive_path);
+  tmp_dir = filesystem::temp_directory_path() / ("backup-" + name);
+  return true;
+}
+
+int BackupCommandBase::run()
+{
+  if (options.count("name") && prepare())
+  {
     if (options.count("database"))
     {
       for (const auto& url : options["database"].as<vector<string>>())
@@ -92,21 +82,7 @@ int BackupCommand::run()
   return -1;
 }
 
-bool BackupCommand::store_backup()
-{
-  string           backup_name   = options["name"].as<string>();
-  filesystem::path backup_folder = get_backup_folder(backup_name);
-  const BupBackup  bup(backup_name);
-
-  if (bup.init() && bup.index(tmp_dir) && bup.save(tmp_dir))
-  {
-    wipe_expired_backups(backup_name);
-    return true;
-  }
-  return false;
-}
-
-bool BackupCommand::pack_metadata()
+bool BackupCommandBase::pack_metadata()
 {
   Crails::WithPath path(tmp_dir);
   filesystem::path filename = "crails-backup.data";
@@ -123,7 +99,7 @@ bool BackupCommand::pack_metadata()
   return false;
 }
 
-bool BackupCommand::pack_path(const string_view key, const filesystem::path& path)
+bool BackupCommandBase::pack_path(const string_view key, const filesystem::path& path)
 {
   if (filesystem::exists(path))
   {
@@ -150,7 +126,7 @@ bool BackupCommand::pack_path(const string_view key, const filesystem::path& pat
   return true;
 }
 
-bool BackupCommand::pack_database(const string& url)
+bool BackupCommandBase::pack_database(const string& url)
 {
   Crails::DatabaseUrl database(url.c_str());
   auto it = dump_functions.find(database.type);
@@ -158,7 +134,7 @@ bool BackupCommand::pack_database(const string& url)
   if (it != dump_functions.end())
   {
     Crails::WithPath path(tmp_dir);
-    string filename = "database." + database.type + '.' + database.database_name;
+    string filename = filename_for_database(database);
     filesystem::path dump_path = tmp_dir / filename;
 
     it->second(database, dump_path);

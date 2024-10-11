@@ -3,6 +3,7 @@
 #include <map>
 #include <string_view>
 #include <cstdlib>
+#include "backup/base.hpp"
 
 using namespace std;
 
@@ -20,37 +21,7 @@ filesystem::path get_backup_folder(const string_view name)
   return filesystem::path(get_backup_root()) / name;
 }
 
-string archive_filename(unsigned long id)
-{
-  return to_string(id) + ".tar.gz";
-}
-
-map<unsigned long, filesystem::file_time_type> list_backup_archives(const string_view name)
-{
-  map<unsigned long, filesystem::file_time_type> list;
-  filesystem::path backup_folder = get_backup_folder(name);
-
-  filesystem::create_directories(backup_folder);
-  for (const auto& entry : filesystem::directory_iterator(backup_folder))
-  {
-    filesystem::path backup_file = entry.path();
-    auto             write_time  = filesystem::last_write_time(backup_file);
-    string           filename    = backup_file.stem().string();
-    unsigned long    id          = atol(filename.c_str());
-
-    list.emplace(id, write_time);
-  }
-  return list;
-}
-
-void wipe_backup(const string_view name, unsigned long id)
-{
-  filesystem::path path = get_backup_folder(name) / archive_filename(id);
-
-  filesystem::remove(path);
-}
-
-void wipe_expired_backups(const string_view name)
+void wipe_expired_backups(BackupBase& backup)
 {
   using namespace chrono_literals;
 
@@ -58,8 +29,8 @@ void wipe_expired_backups(const string_view name)
   const chrono::duration<int> long_retention_start       = duration_from_env("BACKUP_LONGTERM_STARTS_AFTER", 24h);
   const chrono::duration<int> long_retention_periodicity = duration_from_env("BACKUP_LONGTERM_PERIODICITY", 24h);
 
-  auto list = list_backup_archives(name);
-  chrono::time_point now = chrono::file_clock::now();
+  auto list = backup.list();
+  chrono::time_point now = chrono::system_clock::now();
   chrono::time_point last_time_point = now;
   chrono::time_point oldest_backup = now - maximum_backup_retention;
 
@@ -67,14 +38,15 @@ void wipe_expired_backups(const string_view name)
   {
     const auto& entry = *it;
 
+    backup.set_backup_id(entry.first);
     if (entry.second < oldest_backup)
-      wipe_backup(name, entry.first);
+      backup.wipe();
     else if ((now - entry.second) > long_retention_start)
     {
       auto elapsed_time = (last_time_point - entry.second);
 
       if (elapsed_time < long_retention_periodicity)
-        wipe_backup(name, entry.first);
+        backup.wipe();
       else
         last_time_point = entry.second;
     }
