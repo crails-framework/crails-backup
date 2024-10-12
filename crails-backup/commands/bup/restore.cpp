@@ -1,6 +1,7 @@
 #include "restore.hpp"
 #include "../../backup/bup.hpp"
 #include <crails/cli/with_path.hpp>
+#include <crails/cli/process.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -10,14 +11,16 @@ using namespace Bup;
 
 static bool bup_restore(const BupBackup& backup, const filesystem::path& target, const string_view key)
 {
-  ostringstream command, mv_command;
   filesystem::path bup_path(key);
-
-  command << "bup restore "
-    << "-C . "
-    << backup.path_prefix() << '/' << key;
-  cout << "+ " << command.str() << endl;
-  if (std::system(command.str().c_str()) == 0)
+  Crails::ExecutableCommand command{
+    "bup", {"restore"}
+  };
+  
+  BupBackup::append_server_options(command);
+  command
+    << "-C" << "."
+    << (backup.path_prefix() + '/' + string(key));
+  if (Crails::run_command(command))
   {
     filesystem::rename(bup_path.filename(), target);
     return true;
@@ -57,8 +60,6 @@ int RestoreCommand::unpack(const string& id)
 
 void RestoreCommand::unpack_file(const BupBackup& bup, const string_view symbol, const filesystem::path& target)
 {
-  ostringstream command;
-
   require_parent_path(target);
   bup_restore(bup, target, symbol);
 }
@@ -66,7 +67,6 @@ void RestoreCommand::unpack_file(const BupBackup& bup, const string_view symbol,
 void RestoreCommand::unpack_directory(const BupBackup& bup, const string_view symbol, const filesystem::path& target)
 {
   Crails::WithPath change_dir("/");
-  ostringstream command;
 
   require_parent_path(target);
   filesystem::remove_all(target);

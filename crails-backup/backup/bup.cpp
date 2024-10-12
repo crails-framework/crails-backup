@@ -11,6 +11,8 @@
 using namespace std;
 using namespace Crails;
 
+const char* get_backup_root();
+
 static const string_view backup_name = "crails-bup";
 
 static chrono::system_clock::time_point backup_date_from_id(const string id)
@@ -43,6 +45,7 @@ BackupList BupBackup::list() const
   };
   string output;
 
+  append_server_options(command);
   if (run_command(command, output))
   {
     auto backups = split(output, '\n');
@@ -65,13 +68,14 @@ BackupList BupBackup::list() const
 Metadata BupBackup::read_metadata() const
 {
   ExecutableCommand command{
-    "bup", {"restore", "-C"}
+    "bup", {"restore"}
   };
   filesystem::path metadata_path;
 
+  append_server_options(command);
   metadata_path = filesystem::canonical(".") / "crails-backup.data";
   command
-    << metadata_path.parent_path().string()
+    << "-C" << metadata_path.parent_path().string()
     << (path_prefix() + "/crails-backup.data");
   cout << "BupBackup::read_metadata: bup restore -C " << metadata_path.string() << ' ' << path_prefix() << "/crails-backup.data" << endl;
   run_command(command);
@@ -84,6 +88,23 @@ bool BupBackup::wipe() const
     "bup", {"rm", "--unsafe"}
   };
 
+  append_server_options(command);
   command << path_prefix();
   return run_command(command);
+}
+
+static string server_option(const string_view hostname)
+{
+  ostringstream stream;
+
+  stream << hostname << ':' << string_view(get_backup_root()).substr(1);
+  return stream.str();
+}
+
+void BupBackup::append_server_options(Crails::ExecutableCommand& command)
+{
+  const char* hostname = getenv("CRAILS_BACKUP_SERVERNAME");
+
+  if (hostname)
+    command << "-r" << server_option(hostname);
 }

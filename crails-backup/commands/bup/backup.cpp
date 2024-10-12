@@ -1,4 +1,5 @@
 #include <crails/cli/with_path.hpp>
+#include <crails/cli/process.hpp>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -15,25 +16,33 @@ void wipe_expired_backups(BackupBase& backup);
 
 static bool bup_init()
 {
-  return std::system("bup init") == 0;
+  Crails::ExecutableCommand command{
+    "bup", {"init"}
+  };
+  
+  BupBackup::append_server_options(command);
+  return Crails::run_command(command);
 }
 
 static bool bup_index(const filesystem::path& target)
 {
-  ostringstream command;
+  Crails::ExecutableCommand command{
+    "bup", {"index"}
+  };
 
-  command << "bup index " << target;
-  cout << "+ " << command.str() << endl;
-  return std::system(command.str().c_str()) == 0;
+  BupBackup::append_server_options(command);
+  return Crails::run_command(command);
 }
 
 static bool bup_save(const string_view backup_name, const filesystem::path& target)
 {
-  ostringstream command;
+  Crails::ExecutableCommand command{
+    "bup", {"save"}
+  };
 
-  command << "bup save -n " << backup_name << ' ' << target;
-  cout << "+ " << command.str() << endl;
-  return std::system(command.str().c_str()) == 0;
+  BupBackup::append_server_options(command);
+  command << "-n" << backup_name << target.string();
+  return Crails::run_command(command);
 }
 
 bool BackupCommand::store_backup()

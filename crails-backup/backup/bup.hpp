@@ -5,6 +5,8 @@
 #include "base.hpp"
 #include "../list_mode.hpp"
 
+namespace Crails { class ExecutableCommand; }
+
 class BupBackup : public BackupBase
 {
 public:
@@ -15,4 +17,5 @@ public:
   BackupList  list() const override;
 
   std::string path_prefix() const;
+  static void append_server_options(Crails::ExecutableCommand&);
 };
