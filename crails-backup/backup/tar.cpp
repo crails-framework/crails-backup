@@ -4,13 +4,21 @@
 
 using namespace std;
 
+static const map<CompressionStrategy, string> archive_extensions{
+  {GzipCompression,  "gz"},
+  {Bzip2Compression, "bz2"},
+  {XzCompression,    "xz"}
+};
+
 TarBackup::TarBackup(const string& name, const string& id) : BackupBase(name, id)
 {
 }
 
 filesystem::path TarBackup::archive_path() const
 {
-  return path / (id + ".tar.gz");
+  const string extension = archive_extensions.at(compression_strategy());
+
+  return path / (id + ".tar." + extension);
 }
 
 BackupList TarBackup::list() const
@@ -48,4 +56,19 @@ Metadata TarBackup::read_metadata() const
 bool TarBackup::wipe() const
 {
   filesystem::remove(archive_path());
+}
+
+CompressionStrategy TarBackup::compression_strategy()
+{
+  const char* param = getenv("CRAILS_BACKUP_COMPRESSOR");
+
+  if (param != nullptr)
+  {
+    string param_string(param);
+    if (param_string == "bzip2")
+      return Bzip2Compression;
+    if (param_string == "xz")
+      return XzCompression;
+  }
+  return GzipCompression;
 }

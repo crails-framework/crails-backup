@@ -15,11 +15,6 @@
 #include "commands/wipe.hpp"
 #include "commands/remove.hpp"
 
-// bzip2 might be better than gzip (slower with increased compression ?)
-// -> use -j instead of -z in tar commands
-// xz might be even better
-// -> use -J instead of -z in tar commands
-
 #define MAKE_COMMAND(type, command) return make_shared<type::command##Command>()
 
 #define FIND_COMMAND(command, backend) \

@@ -42,7 +42,19 @@ bool BackupCommand::gzip_pack()
 {
   ostringstream stream;
 
-  stream << "gzip " << archive_path;
+  switch (TarBackup::compression_strategy())
+  {
+  case GzipCompression:
+    stream << "gzip " << archive_path;
+    break ;
+  case Bzip2Compression:
+    stream << "bzip2 " << archive_path;
+    break ;
+  case XzCompression:
+    stream << "xz " << archive_path;
+    break ;
+  }
+  cout << "+ " << stream.str() << endl;
   return system(stream.str().c_str()) == 0;
 }
 

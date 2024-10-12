@@ -11,6 +11,23 @@ static string tar_transformer(const string_view key, const filesystem::path& pat
   return "s|" + string(key) + '|' + path.string().substr(1) + '|';
 }
 
+static const map<CompressionStrategy, char> compression_options{
+  {GzipCompression,  'z'},
+  {Bzip2Compression, 'j'},
+  {XzCompression,    'J'}
+};
+
+static string tar_extract_command(const TarBackup& backup)
+{
+  ostringstream stream;
+
+  stream << "tar -"
+    << compression_options.at(TarBackup::compression_strategy())
+    << "xvf "
+    << backup.archive_path();
+  return stream.str();
+}
+
 int RestoreCommand::restore(const string_view name, const string& id)
 {
   const TarBackup backup(string(name), id);
@@ -52,7 +69,7 @@ void RestoreCommand::unpack_file(const TarBackup& backup, const string_view symb
   ostringstream command;
 
   require_parent_path(target);
-  command << "tar -zxvf " << backup.archive_path()
+  command << tar_extract_command(backup)
           << ' ' << symbol
           << " -O>" << target;
   cout << "+ " << command.str() << endl;
@@ -65,7 +82,7 @@ void RestoreCommand::unpack_directory(const TarBackup& backup, const string_view
   ostringstream command;
 
   require_parent_path(target);
-  command << "tar -zxvf " << backup.archive_path()
+  command << tar_extract_command(backup)
           << " --transform " << quoted(tar_transformer(symbol, target))
           << ' ' << symbol;
   cout << "+ " << command.str() << endl;
@@ -82,7 +99,7 @@ void RestoreCommand::unpack_database(const TarBackup& backup, const string_view 
     stringstream tar_command;
     filesystem::path dump_path(symbol);
 
-    tar_command << "tar -zxvf " << backup.archive_path() << ' ' << symbol;
+    tar_command << tar_extract_command(backup) << ' ' << symbol;
     cout << "+ " << tar_command.str() << endl;
     if (system(tar_command.str().c_str()) == 0)
       function->second(database, dump_path);

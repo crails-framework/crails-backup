@@ -4,6 +4,11 @@
 #include <map>
 #include "base.hpp"
 
+enum CompressionStrategy
+{
+  GzipCompression, Bzip2Compression, XzCompression
+};
+
 class TarBackup : public BackupBase
 {
 public:
@@ -14,4 +19,6 @@ public:
   BackupList list() const override;
 
   std::filesystem::path archive_path() const;
+
+  static CompressionStrategy compression_strategy();
 };
