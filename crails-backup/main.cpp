@@ -62,6 +62,8 @@ public:
   }
 };
 
+const char* get_backup_root();
+
 static void find_exe_file(const char* arg0)
 {
   error_code error;
@@ -79,6 +81,7 @@ int main(int argc, const char** argv)
 
   if (argv[0])
     find_exe_file(argv[0]);
+  filesystem::create_directories(get_backup_root());
   if (index.initialize(argc, argv))
     return index.run();
   return -1;
