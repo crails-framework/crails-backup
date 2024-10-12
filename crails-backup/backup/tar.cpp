@@ -32,6 +32,7 @@ BackupList TarBackup::list() const
     auto             write_time  = filesystem::last_write_time(backup_file);
     string           filename    = backup_file.stem().string();
 
+    filename = filename.substr(0, filename.find_first_of('.'));
     list.emplace(filename, chrono::file_clock::to_sys(write_time));
   }
   return list;
@@ -55,7 +56,7 @@ Metadata TarBackup::read_metadata() const
 
 bool TarBackup::wipe() const
 {
-  filesystem::remove(archive_path());
+  return filesystem::remove(archive_path());
 }
 
 CompressionStrategy TarBackup::compression_strategy()

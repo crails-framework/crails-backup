@@ -73,7 +73,8 @@ void RestoreCommand::unpack_file(const TarBackup& backup, const string_view symb
           << ' ' << symbol
           << " -O>" << target;
   cout << "+ " << command.str() << endl;
-  system(command.str().c_str());
+  if (system(command.str().c_str()) != 0)
+    cerr << "failed to unpack " << symbol << endl;
 }
 
 void RestoreCommand::unpack_directory(const TarBackup& backup, const string_view symbol, const filesystem::path& target)
@@ -86,7 +87,8 @@ void RestoreCommand::unpack_directory(const TarBackup& backup, const string_view
           << " --transform " << quoted(tar_transformer(symbol, target))
           << ' ' << symbol;
   cout << "+ " << command.str() << endl;
-  system(command.str().c_str());
+  if (system(command.str().c_str()) != 0)
+    cerr << "failed to unpack " << symbol << endl;
 }
 
 void RestoreCommand::unpack_database(const TarBackup& backup, const string_view symbol, const string_view url)

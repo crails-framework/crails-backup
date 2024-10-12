@@ -105,6 +105,7 @@ bool BackupCommand::pack_metadata()
 {
   if (BackupCommandBase::pack_metadata())
   {
+    Crails::WithPath path(tmp_dir);
     ostringstream command;
     filesystem::path filename = "crails-backup.data";
 
@@ -117,6 +118,8 @@ bool BackupCommand::pack_metadata()
 
 bool BackupCommand::store_backup()
 {
+  Crails::WithPath path(tmp_dir);
+
   if (gzip_pack())
   {
     stringstream     command;

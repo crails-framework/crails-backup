@@ -55,5 +55,7 @@ int RestoreCommandBase::run()
     tmp_src_dir = filesystem::temp_directory_path() / ("backup-" + name);
     return restore(name, id);
   }
+  else
+    cerr << "missing name or id option" << endl;
   return -1;
 }
