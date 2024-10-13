@@ -31,6 +31,7 @@ static bool bup_index(const filesystem::path& target)
   };
 
   BupBackup::append_server_options(command);
+  command << target.string();
   return Crails::run_command(command);
 }
 
