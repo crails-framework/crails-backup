@@ -12,8 +12,8 @@ bool dump_mongodb(const DatabaseUrl& database, const filesystem::path& target)
 
   stream
     << "mongodump"
-    << " --archive " << target
-    << " --uri " << database.to_string();
+    << " --archive=" << target
+    << " --uri=" << database.to_string();
   cout << "+ " << stream.str() << endl;
   return system(stream.str().c_str()) == 0;
 }
@@ -24,7 +24,7 @@ bool restore_mongodb(const DatabaseUrl& database, const filesystem::path& target
 
   stream
     << "mongorestore"
-    << " --uri " << database.to_string()
+    << " --uri=" << database.to_string()
     << ' ' << target;
   cout << "+ " << stream.str() << endl;
   return system(stream.str().c_str()) == 0;
