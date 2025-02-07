@@ -1,4 +1,5 @@
 #include <crails/database_url.hpp>
+#include <crails/logger.hpp>
 #include <filesystem>
 #include <sstream>
 #include <cstdlib>
@@ -38,7 +39,7 @@ bool dump_postgres(const DatabaseUrl& database, const filesystem::path& target)
     << ' ' << quoted(database.database_name)
     << '>' << target;
   prepare_password(database);
-  cout << "+ " << stream.str() << endl;
+  logger << "+ " << stream.str() << Logger::endl;
   return system(stream.str().c_str()) == 0;
 }
 
@@ -52,6 +53,6 @@ bool restore_postgres(const DatabaseUrl& database, const filesystem::path& sourc
     << ' ' << quoted(database.database_name)
     << '<' << source;
   prepare_password(database);
-  cout << "+ " << stream.str() << endl;
+  logger << "+ " << stream.str() << Logger::endl;
   return system(stream.str().c_str()) == 0;
 }

@@ -2,8 +2,10 @@
 #include "../../backup/tar.hpp"
 #include <iostream>
 #include <crails/cli/with_path.hpp>
+#include <crails/logger.hpp>
 
 using namespace std;
+using namespace Crails;
 using namespace Tar;
 
 static string tar_transformer(const string_view key, const filesystem::path& path)
@@ -39,7 +41,7 @@ int RestoreCommand::restore(const string_view name, const string& id)
     return unpack(backup);
   }
   else
-    cerr << "backup archive " << backup.archive_path() << " not found." << endl;
+    logger << "backup archive " << backup.archive_path() << " not found." << Logger::endl;
   return -1;
 }
 
@@ -59,7 +61,7 @@ int RestoreCommand::unpack(const TarBackup& backup)
     else if (symbol.find("file.") == 0)
       unpack_file(backup, symbol, target);
     else
-      cerr << "backup metadata contains an unknown symbol: " << symbol << endl;
+      logger << "backup metadata contains an unknown symbol: " << symbol << Logger::endl;
   }
   return 0;
 }
@@ -72,9 +74,9 @@ void RestoreCommand::unpack_file(const TarBackup& backup, const string_view symb
   command << tar_extract_command(backup)
           << ' ' << symbol
           << " -O>" << target;
-  cout << "+ " << command.str() << endl;
+  logger << "+ " << command.str() << Logger::endl;
   if (system(command.str().c_str()) != 0)
-    cerr << "failed to unpack " << symbol << endl;
+    logger << "failed to unpack " << symbol << Logger::endl;
 }
 
 void RestoreCommand::unpack_directory(const TarBackup& backup, const string_view symbol, const filesystem::path& target)
@@ -86,9 +88,9 @@ void RestoreCommand::unpack_directory(const TarBackup& backup, const string_view
   command << tar_extract_command(backup)
           << " --transform " << quoted(tar_transformer(symbol, target))
           << ' ' << symbol;
-  cout << "+ " << command.str() << endl;
+  logger << "+ " << command.str() << Logger::endl;
   if (system(command.str().c_str()) != 0)
-    cerr << "failed to unpack " << symbol << endl;
+    logger << "failed to unpack " << symbol << Logger::endl;
 }
 
 void RestoreCommand::unpack_database(const TarBackup& backup, const string_view symbol, const string_view url)
@@ -102,10 +104,10 @@ void RestoreCommand::unpack_database(const TarBackup& backup, const string_view 
     filesystem::path dump_path(symbol);
 
     tar_command << tar_extract_command(backup) << ' ' << symbol;
-    cout << "+ " << tar_command.str() << endl;
+    logger << "+ " << tar_command.str() << Logger::endl;
     if (system(tar_command.str().c_str()) == 0)
       function->second(database, dump_path);
   }
   else
-    cerr << "failed to restore database " << url << endl;
+    logger << "failed to restore database " << url << Logger::endl;
 }

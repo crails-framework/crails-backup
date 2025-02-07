@@ -1,8 +1,10 @@
 #include "tar.hpp"
+#include <crails/logger.hpp>
 #include <string_view>
 #include <iostream>
 
 using namespace std;
+using namespace Crails;
 
 static const map<CompressionStrategy, string> archive_extensions{
   {GzipCompression,  "gz"},
@@ -44,13 +46,13 @@ Metadata TarBackup::read_metadata() const
   filesystem::path metadata_path("crails-backup.data");
 
   command << "tar -zxvf " << archive_path() << ' ' << metadata_path;
-  cout << "+ " << command.str() << endl;
+  logger << "+ " << command.str() << Logger::endl;
   if (system(command.str().c_str()) == 0)
   {
     return ::read_metadata(metadata_path);
   }
   else
-    cerr << "failed to extract metadata from " << archive_path() << endl;
+    logger << "failed to extract metadata from " << archive_path() << Logger::endl;
   return Metadata();
 }
 

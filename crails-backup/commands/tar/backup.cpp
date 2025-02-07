@@ -1,10 +1,12 @@
 #include "backup.hpp"
 #include "../../backup/tar.hpp"
 #include <crails/cli/with_path.hpp>
+#include <crails/logger.hpp>
 #include <sstream>
 #include <iostream>
 
 using namespace std;
+using namespace Crails;
 using namespace Tar;
 
 static std::filesystem::path archive_path;
@@ -54,7 +56,7 @@ bool BackupCommand::gzip_pack()
     stream << "xz " << archive_path;
     break ;
   }
-  cout << "+ " << stream.str() << endl;
+  logger << "+ " << stream.str() << Logger::endl;
   return system(stream.str().c_str()) == 0;
 }
 
@@ -76,11 +78,11 @@ bool BackupCommand::pack_path(const string_view key, const filesystem::path& pat
             << " --transform "
             << quoted(tar_transformer(full_key, absolute_path))
             << ' ' << absolute_path;
-    cout << "+ " << command.str() << endl;
+    logger << "+ " << command.str() << Logger::endl;
     return system(command.str().c_str()) == 0;
   }
   else
-    cerr << "crails-backup could not solve " << path << endl;
+    logger << "crails-backup could not solve " << path << Logger::endl;
   return true;
 }
 
@@ -95,7 +97,7 @@ bool BackupCommand::pack_database(const string& url)
 
     command << add_to_archive_command_prefix()
             << ' ' << filename_for_database(database);
-    cout << "+ " << command.str() << endl;
+    logger << "+ " << command.str() << Logger::endl;
     return system(command.str().c_str()) == 0;
   }
   return false;
@@ -110,7 +112,7 @@ bool BackupCommand::pack_metadata()
     filesystem::path filename = "crails-backup.data";
 
     command << add_to_archive_command_prefix() << ' ' << filename;
-    cout << "+ " << command.str() << endl;
+    logger << "+ " << command.str() << Logger::endl;
     return system(command.str().c_str()) == 0;
   }
   return false;
@@ -140,7 +142,7 @@ bool BackupCommand::store_backup()
     backup.set_backup_id(to_string(highest_id + 1));
     target_path = backup.archive_path();
     command << "mv " << compressed_archive_path << ' ' << target_path;
-    cout << "+ " << command.str() << endl;
+    logger << "+ " << command.str() << Logger::endl;
     if (system(command.str().c_str()) == 0)
     {
       wipe_expired_backups(backup);

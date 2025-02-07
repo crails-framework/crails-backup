@@ -4,6 +4,7 @@
 #include <crails/cli/process.hpp>
 #include <filesystem>
 #include <iostream>
+#include "logger.hpp"
 #include "commands/add.hpp"
 #include "commands/tar/backup.hpp"
 #include "commands/tar/restore.hpp"
@@ -77,6 +78,7 @@ static void find_exe_file(const char* arg0)
 
 int main(int argc, const char** argv)
 {
+  LoggingFile logfile_lock(argc, argv);
   IndexCommand index;
 
   if (argv[0])

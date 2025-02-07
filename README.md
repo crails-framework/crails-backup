@@ -141,6 +141,7 @@ command and append the environment variables at the top of the file.
 For instance:
 ```
 LD_LIBRRAY_PATH="/usr/local/lib"
+CRAILS_BACKUP_LOG="/var/log/crails-backup.log"
 CRAILS_BACKUP_PATH="/backup-store"
 CRAILS_BACKUP_SERVERNAME="bup-server-hostname"
 BACKUP_MAX_RETENTION="365d"

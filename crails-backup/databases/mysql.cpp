@@ -1,4 +1,5 @@
 #include <crails/database_url.hpp>
+#include <crails/logger.hpp>
 #include <filesystem>
 #include <sstream>
 #include <iostream>
@@ -29,7 +30,7 @@ bool dump_mysql(const DatabaseUrl& database, const filesystem::path& target)
     << append_connection_options(database)
     << ' ' << quoted(database.database_name)
     << '>' << target;
-  cout << "+ " << stream.str() << endl;
+  logger << "+ " << stream.str() << Logger::endl;
   return system(stream.str().c_str()) == 0;
 }
 
@@ -42,6 +43,6 @@ bool restore_mysql(const DatabaseUrl& database, const filesystem::path& source)
     << append_connection_options(database)
     << " -p " << quoted(database.database_name)
     << '<' << source;
-  cout << "+ " << stream.str() << endl;
+  logger << "+ " << stream.str() << Logger::endl;
   return system(stream.str().c_str()) == 0;
 }
