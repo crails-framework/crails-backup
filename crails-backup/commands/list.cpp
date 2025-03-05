@@ -43,7 +43,13 @@ int ListCommandBase::list_files(const BackupBase& backup)
     if (short_mode)
       cout << archive.first << endl;
     else
+    {
+#if __cplusplus >= 202002L
       cout << left << setw(20) << archive.first << ' ' << format("{:%H:%M %Y-%m-%d}", archive.second) << endl;
+#else
+      cout << left << setw(20) << archive.first << ' ' << chrono::system_clock::to_time_t(archive.second) << endl;
+#endif
+    }
   }
   return 0;
 }

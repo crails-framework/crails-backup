@@ -130,7 +130,6 @@ bool BackupCommand::store_backup()
     filesystem::path target_path;
     TarBackup        backup(backup_name);
     auto             backup_list   = backup.list();
-    auto             current_time  = chrono::file_clock::now();
     unsigned long    highest_id    = 0;
 
     for (const auto& backup_file : backup_list)

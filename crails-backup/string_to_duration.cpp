@@ -21,7 +21,11 @@ chrono::duration<int> string_to_duration(const string& src)
     case 's': duration += chrono::seconds(number); break;
     case 'm': duration += chrono::minutes(number); break;
     case 'h': duration += chrono::hours(number); break;
+#if __cplusplus >= 202002L
     case 'd': duration += chrono::days(number); break;
+#else
+    case 'd': throw std::runtime_error("c++17 does not support std::chrono::days, don't use the 'd' letter in time strings");
+#endif
     }
   }
   return duration;
