@@ -25,8 +25,9 @@ bool restore_mongodb(const DatabaseUrl& database, const filesystem::path& target
 
   stream
     << "mongorestore"
+    << " --archive=" << target
     << " --uri=" << database.to_string()
-    << ' ' << target;
+    << " --drop";
   logger << "+ " << stream.str() << Logger::endl;
   return system(stream.str().c_str()) == 0;
 }
