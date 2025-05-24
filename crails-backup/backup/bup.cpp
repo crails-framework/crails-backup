@@ -42,7 +42,7 @@ BackupList BupBackup::list() const
 {
   BackupList results;
   ExecutableCommand command{
-    "bup", vector<string>{"ls", "-n", string(backup_name)}
+    "bup", vector<string>{"ls", "-n", id}
   };
   string output;
 
@@ -78,7 +78,7 @@ Metadata BupBackup::read_metadata() const
   command
     << "-C" << metadata_path.parent_path().string()
     << (path_prefix() + "/crails-backup.data");
-  logger << "BupBackup::read_metadata: bup restore -C " << metadata_path.string() << ' ' << path_prefix() << "/crails-backup.data" << Logger::endl;
+  logger << "BupBackup::read_metadata: " << command << Logger::endl;
   run_command(command);
   return ::read_metadata(metadata_path);
 }
