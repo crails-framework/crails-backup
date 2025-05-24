@@ -1,7 +1,7 @@
 #include "bup.hpp"
+#include <crails/cli/process.hpp>
 #include <crails/logger.hpp>
 #include <crails/utils/split.hpp>
-#include <crails/cli/process.hpp>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
