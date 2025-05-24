@@ -17,6 +17,7 @@ LoggingFile::LoggingFile(int argc, const char** argv)
 {
   const char* output = getenv("CRAILS_BACKUP_LOG");
 
+  logger << Logger::Info;
   if (output != nullptr)
   {
     stream = new ofstream(output, ios_base::app);
@@ -24,6 +25,7 @@ LoggingFile::LoggingFile(int argc, const char** argv)
     {
       logger.set_stdout(*stream);
       logger.set_stderr(*stream);
+      logger.set_log_level(Logger::Debug);
       display_command(argc, argv);
       return ;
     }
