@@ -5,7 +5,15 @@
 #include <string>
 #include "../metadata.hpp"
 
-typedef std::map<std::string, std::chrono::system_clock::time_point> BackupList;
+struct BackupSortFunctor
+{
+  bool operator()(const std::string& a, const std::string& b) const
+  {
+    return std::stoi(a) < std::stoi(b);
+  }
+};
+
+typedef std::map<std::string, std::chrono::system_clock::time_point, BackupSortFunctor> BackupList;
 
 struct BackupBase
 {

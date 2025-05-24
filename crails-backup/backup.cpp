@@ -31,24 +31,22 @@ void wipe_expired_backups(BackupBase& backup)
 
   auto list = backup.list();
   chrono::time_point now = chrono::system_clock::now();
-  chrono::time_point last_time_point = now;
   chrono::time_point oldest_backup = now - maximum_backup_retention;
+  chrono::time_point last_time_point = oldest_backup - long_retention_periodicity;
 
-  for (auto it = list.rbegin() ; it != list.rend() ; ++it)
+  for (auto it = list.begin() ; it != list.end() ; ++it)
   {
     const auto& entry = *it;
+    auto backup_age = now - entry.second;
 
     backup.set_backup_id(entry.first);
-    if (entry.second < oldest_backup)
+    if (backup_age < long_retention_start)
+      break ;
+    if (backup_age > maximum_backup_retention)
       backup.wipe();
-    else if ((now - entry.second) > long_retention_start)
-    {
-      auto elapsed_time = (last_time_point - entry.second);
-
-      if (elapsed_time < long_retention_periodicity)
-        backup.wipe();
-      else
-        last_time_point = entry.second;
-    }
+    else if ((entry.second - last_time_point) < long_retention_periodicity)
+      backup.wipe();
+    else
+      last_time_point = entry.second;
   }
 }
