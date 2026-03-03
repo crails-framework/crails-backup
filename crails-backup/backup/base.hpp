@@ -1,19 +1,16 @@
 #pragma once
 #include <chrono>
 #include <filesystem>
-#include <map>
+#include <vector>
 #include <string>
 #include "../metadata.hpp"
 
-struct BackupSortFunctor
-{
-  bool operator()(const std::string& a, const std::string& b) const
-  {
-    return std::stoi(a) < std::stoi(b);
-  }
-};
+typedef std::vector<std::pair<std::string, std::chrono::system_clock::time_point> > BackupList;
 
-typedef std::map<std::string, std::chrono::system_clock::time_point, BackupSortFunctor> BackupList;
+namespace BackupSortFunctor
+{
+  void sort(BackupList& list);
+};
 
 struct BackupBase
 {

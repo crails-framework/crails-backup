@@ -42,7 +42,7 @@ BackupList BupBackup::list() const
 {
   BackupList results;
   ExecutableCommand command{
-    "bup", vector<string>{"ls", "-n", id}
+    "bup", vector<string>{"ls", "-n", name}
   };
   string output;
 
@@ -60,8 +60,9 @@ BackupList BupBackup::list() const
         backup_id == "latest" ? latest_backup : backup_id
       );
 
-      results.emplace(backup_id, date);
+      results.push_back({backup_id, date});
     }
+    BackupSortFunctor::sort(results);
   }
   return results;
 }
