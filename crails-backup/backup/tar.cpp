@@ -66,6 +66,7 @@ Metadata TarBackup::read_metadata() const
 
 bool TarBackup::wipe() const
 {
+  logger << "+ rm " << archive_path();
   return filesystem::remove(archive_path());
 }
 

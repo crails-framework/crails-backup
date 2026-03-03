@@ -29,6 +29,9 @@ void wipe_expired_backups(BackupBase& backup)
   const chrono::duration<int> long_retention_start       = duration_from_env("BACKUP_LONGTERM_STARTS_AFTER", 24h);
   const chrono::duration<int> long_retention_periodicity = duration_from_env("BACKUP_LONGTERM_PERIODICITY", 24h);
 
+  if (maximum_backup_retention == 0s) // if set to zero, store backups undefinitely
+    return ;
+
   auto list = backup.list();
   chrono::time_point now = chrono::system_clock::now();
   chrono::time_point oldest_backup = now - maximum_backup_retention;

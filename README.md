@@ -110,6 +110,9 @@ considered expired after 31 days.
 You may change how long backups are kept around by setting the
 `BACKUP_MAX_RETENTION` variable.
 
+Setting `BACKUP_MAX_RETENTION` to zero will disable automatic removal
+of old backups, requiring you to managing your backups manually.
+
 #### Backup long-term retention
 
 You may also set an option for long-term backups. Long-term retention
@@ -159,6 +162,9 @@ crails-backup provides two different backends:
 
 If the bup command is available, the bup backend will be used by default.
 Otherwise, it will fallback to the tar backend.
+
+You may enforce the use of one or the other by using the
+`CRAILS_BACKUP_BACKEND` environment variable to either `bup` or `tar`.
 
 ### Bup
 #### Remote storage
