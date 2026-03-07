@@ -38,11 +38,8 @@ BackupList TarBackup::list() const
 #if __cplusplus >= 202002L
     list.push_back({filename, chrono::file_clock::to_sys(write_time)});
 #else
-    // This should work, according to https://stackoverflow.com/questions/77360845/convert-stdfilesystemfile-time-type-to-epoch-nanoseconds
-    // But it won't work, according to my own tests. Still, it builds with c++17.
-    list.push_back({filename, chrono::system_clock::from_time_t(
-      chrono::duration_cast<chrono::seconds>(write_time.time_since_epoch()).count()
-    )});
+    chrono::duration age = filesystem::file_time_type::clock::now() - write_time;
+    list.push_back({filename, chrono::system_clock::now() - chrono::duration_cast<chrono::seconds>(age)});
 #endif
   }
   BackupSortFunctor::sort(list);
