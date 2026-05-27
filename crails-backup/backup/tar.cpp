@@ -35,11 +35,11 @@ BackupList TarBackup::list() const
     string                     filename    = backup_file.stem().string();
 
     filename = filename.substr(0, filename.find_first_of('.'));
-#if __cplusplus >= 202002L
-    list.push_back({filename, chrono::time_point_cast<chrono::system_clock::duration>(chrono::file_clock::to_sys(write_time))});
-#else
+#if __cplusplus < 202002L || defined(CHRONO_NO_FORMAT)
     chrono::duration age = filesystem::file_time_type::clock::now() - write_time;
     list.push_back({filename, chrono::system_clock::now() - chrono::duration_cast<chrono::seconds>(age)});
+#else
+    list.push_back({filename, chrono::time_point_cast<chrono::system_clock::duration>(chrono::file_clock::to_sys(write_time))});
 #endif
   }
   BackupSortFunctor::sort(list);
